@@ -13,7 +13,7 @@ export default function TreasuryHero({ name, balance, decimals, symbol, threshol
       />
       <div className="relative">
         <p className="font-mono text-xs tracking-[0.2em] uppercase text-[var(--ink-soft)] mb-3">
-          Family Treasury · Onchain Ledger
+          Group Treasury · Onchain Ledger
         </p>
         <h1 className="font-display text-4xl sm:text-5xl font-semibold leading-tight mb-6 max-w-xl">
           {name || "Loading…"}

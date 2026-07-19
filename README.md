@@ -1,77 +1,83 @@
-# Family Treasury
+# Fundo — Onchain Group Treasuries
 
-An onchain multisig for family savings, built for Monad.
+A platform where anyone can spin up their own shared treasury on Monad — for a
+family, a team, a club, or any group that pools money together. Name it, add
+signatories with nicknames, set an M-of-N approval rule, and go. Every group's
+treasury is a fully independent contract — no shared admin, no central control.
 
 - Every contribution is logged and attributed on-chain — no more "whose money is this?"
-- Withdrawals need M-of-N signatory approval (e.g. 3 of 5), configurable by the family itself
-- Adding/removing signatories and changing the approval rule are themselves governed by the same approval process
+- Withdrawals need M-of-N signatory approval (e.g. 3 of 5), configurable per treasury
+- Adding/removing signatories and changing the approval rule are themselves governed
+  by the same approval process
 - Full history is public and auditable by any member (or anyone, on a public block explorer)
 
 ## Structure
 
 ```
-contracts/   Solidity contract (FamilyTreasury.sol) + tests + deploy script
-frontend/    React dApp: contribute, propose, approve, and track balances
+contracts/   Solidity: FamilyTreasury.sol (one group's vault) +
+             FamilyTreasuryFactory.sol (deploys + indexes treasuries) + tests
+frontend/    React dApp: create a treasury, see the ones you belong to,
+             contribute, propose, approve, track history
 ```
 
 ## Quickstart
 
-### 1. Deploy the contract
+### 1. Deploy the factory (one-time)
 
 ```bash
 cd contracts
-cp .env.example .env        # fill in DEPLOYER_PRIVATE_KEY and USDC_ADDRESS
-```
-
-Edit `scripts/deploy.js` — set `treasuryName`, `members` (address + display name per
-signatory), and `threshold` (how many approvals a withdrawal needs).
-
-```bash
+cp .env.example .env        # fill in DEPLOYER_PRIVATE_KEY
 npm install
 node scripts/compile.js     # compiles locally, no external downloads needed
-npx hardhat run scripts/deploy.js --network monadTestnet
+npx hardhat run scripts/deploy-factory.js --network monadTestnet
 ```
 
-This prints the deployed contract address and the two env vars the frontend needs.
+This prints the factory's address — that's the only contract you deploy by hand.
+From here on, new treasuries are created through the frontend, not the command line.
+
+Optional: `npx hardhat run scripts/deploy-mock-usdc.js --network monadTestnet` deploys
+a free test stablecoin (mintable) so you can try things out without hunting for a real
+USDC address on testnet.
 
 ### 2. Run the frontend
 
 ```bash
 cd frontend
-cp .env.example .env        # paste in VITE_TREASURY_ADDRESS and VITE_USDC_ADDRESS
+cp .env.example .env        # paste in VITE_FACTORY_ADDRESS (and optionally VITE_DEFAULT_TOKEN_ADDRESS)
 npm install
 npm run dev
 ```
 
-Open the printed local URL, connect a wallet (MetaMask or similar) on Monad Testnet,
-and you're live.
+Open the printed local URL, connect a wallet, click **Create treasury**, and you're live.
+Each treasury gets its own page at `/treasury/0x...` you can share with that group.
 
-## About the USDC address
+## About token addresses
 
 Monad testnet token addresses can change when the testnet resets, and mainnet USDC's
 canonical address should always be verified directly before you send real funds to it.
-Look it up on Monad's own docs (`docs.monad.xyz`) or a trusted explorer
-(`testnet.monadexplorer.com` / `monadvision.com`) at deploy time rather than trusting a
-hardcoded value here — that's why `USDC_ADDRESS` is left blank in `.env.example`.
+Look it up on Monad's own docs (`docs.monad.xyz`) or a trusted explorer at deploy/create
+time rather than trusting a hardcoded value — the create-treasury form asks for a token
+address explicitly so nothing is assumed for you.
 
-## How the contract works
+## How it works
 
-- **Members** hold a name + running contribution total. Only active members can
-  contribute or propose/approve anything.
-- **Proposals** are one of: withdraw funds, add a member, remove a member, or change
-  the approval threshold. Creating a proposal counts as the proposer's own approval.
-- Once a proposal collects `threshold` approvals it **executes automatically** on the
-  approval that crosses the line (a manual `executeProposal` is also exposed as a
-  fallback).
-- Removing a member automatically lowers the threshold if it would otherwise exceed
-  the remaining member count, so the treasury never locks itself out.
+- **Factory**: one contract, deployed once. `createTreasury(...)` deploys a brand new,
+  fully independent `FamilyTreasury` and indexes it by each initial member's address so
+  they can find it again from the homepage. (Members added *later*, via a proposal, aren't
+  auto-indexed — they'll need the treasury's link shared with them directly.)
+- **Treasury**: holds a name, a stablecoin balance, a list of signatories with running
+  contribution totals, and a threshold. Proposals cover withdrawals, adding/removing
+  signatories, and changing the threshold — all gated by the same M-of-N approval.
+  Creating a proposal counts as the proposer's own approval, and it executes itself the
+  moment the last needed approval lands.
+- Removing a member automatically lowers the threshold if it would otherwise exceed the
+  remaining member count, so a treasury never locks itself out.
 
 Run the test suite (`cd contracts && npx hardhat test --no-compile`) to see all of this
-exercised end to end, including edge cases like double-approval and insufficient-balance
-guards.
+exercised end to end — 11 tests covering both contracts.
 
 ## Security note
 
-This contract has not been audited. It's a solid, tested starting point for a family's
-own funds at a reasonable scale, but if you're planning to hold significant value,
-get a professional review first — the same way you would with any smart contract.
+Neither contract has been audited. Solid, tested starting points for real-world use at
+a reasonable scale — but if you're planning to route significant value through this,
+get a professional review first, the same way you would with any smart contract.

@@ -1,10 +1,9 @@
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import treasuryAbi from "../lib/treasuryAbi.json";
-import { TREASURY_ADDRESS } from "../lib/wagmi";
 import { formatUsdc, shortAddr, timeAgo, proposalLabel, PROPOSAL_TYPES } from "../lib/format";
 import ApprovalSeal from "./ApprovalSeal";
 
-export default function ProposalCard({ proposal, threshold, decimals, symbol, isMember, onDone }) {
+export default function ProposalCard({ treasuryAddress, proposal, threshold, decimals, symbol, isMember, onDone }) {
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: waiting, isSuccess } = useWaitForTransactionReceipt({ hash });
 
@@ -14,9 +13,9 @@ export default function ProposalCard({ proposal, threshold, decimals, symbol, is
   if (isSuccess) onDone?.();
 
   const approve = () =>
-    writeContract({ address: TREASURY_ADDRESS, abi: treasuryAbi, functionName: "approveProposal", args: [BigInt(proposal.id)] });
+    writeContract({ address: treasuryAddress, abi: treasuryAbi, functionName: "approveProposal", args: [BigInt(proposal.id)] });
   const execute = () =>
-    writeContract({ address: TREASURY_ADDRESS, abi: treasuryAbi, functionName: "executeProposal", args: [BigInt(proposal.id)] });
+    writeContract({ address: treasuryAddress, abi: treasuryAbi, functionName: "executeProposal", args: [BigInt(proposal.id)] });
 
   return (
     <div className="flex gap-4 rounded-xl border border-[var(--paper-line)] bg-[var(--paper)] p-5">

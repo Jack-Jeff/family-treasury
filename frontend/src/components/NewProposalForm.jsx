@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { parseUnits, isAddress } from "viem";
 import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import treasuryAbi from "../lib/treasuryAbi.json";
-import { TREASURY_ADDRESS } from "../lib/wagmi";
+
 
 const TABS = [
   { key: "withdraw", label: "Withdraw" },
@@ -11,7 +11,7 @@ const TABS = [
   { key: "threshold", label: "Change rule" },
 ];
 
-export default function NewProposalForm({ decimals, isMember, memberCount, onCreated }) {
+export default function NewProposalForm({ treasuryAddress, decimals, isMember, memberCount, onCreated }) {
   const [tab, setTab] = useState("withdraw");
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
@@ -41,7 +41,7 @@ export default function NewProposalForm({ decimals, isMember, memberCount, onCre
     if (tab === "withdraw") {
       if (!isAddress(to) || !amount) return;
       writeContract({
-        address: TREASURY_ADDRESS,
+        address: treasuryAddress,
         abi: treasuryAbi,
         functionName: "proposeWithdrawal",
         args: [to, parseUnits(amount, decimals), description || "Withdrawal"],
@@ -49,7 +49,7 @@ export default function NewProposalForm({ decimals, isMember, memberCount, onCre
     } else if (tab === "add") {
       if (!isAddress(to) || !name) return;
       writeContract({
-        address: TREASURY_ADDRESS,
+        address: treasuryAddress,
         abi: treasuryAbi,
         functionName: "proposeAddMember",
         args: [to, name, description || `Add ${name}`],
@@ -57,7 +57,7 @@ export default function NewProposalForm({ decimals, isMember, memberCount, onCre
     } else if (tab === "remove") {
       if (!isAddress(to)) return;
       writeContract({
-        address: TREASURY_ADDRESS,
+        address: treasuryAddress,
         abi: treasuryAbi,
         functionName: "proposeRemoveMember",
         args: [to, description || "Remove signatory"],
@@ -65,7 +65,7 @@ export default function NewProposalForm({ decimals, isMember, memberCount, onCre
     } else if (tab === "threshold") {
       if (!threshold) return;
       writeContract({
-        address: TREASURY_ADDRESS,
+        address: treasuryAddress,
         abi: treasuryAbi,
         functionName: "proposeChangeThreshold",
         args: [BigInt(threshold), description || "Change approval rule"],
@@ -144,11 +144,11 @@ export default function NewProposalForm({ decimals, isMember, memberCount, onCre
           </Field>
         )}
 
-        <Field label="Reason (shown to the whole family)">
+        <Field label="Reason (shown to everyone in the group)">
           <input
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="e.g. New bike for Kid's birthday"
+            placeholder="e.g. Venue deposit for the offsite"
             className="w-full rounded-lg border border-[var(--paper-line)] bg-[var(--paper)] px-3 py-2 text-sm focus:outline-none"
           />
         </Field>

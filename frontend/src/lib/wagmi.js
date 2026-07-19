@@ -15,5 +15,8 @@ export const wagmiConfig = createConfig({
   },
 });
 
-export const TREASURY_ADDRESS = import.meta.env.VITE_TREASURY_ADDRESS || "";
-export const USDC_ADDRESS = import.meta.env.VITE_USDC_ADDRESS || "";
+export const FACTORY_ADDRESS = import.meta.env.VITE_FACTORY_ADDRESS || "";
+
+// A token address to pre-fill the "create treasury" form with (e.g. testnet USDC you've
+// already deployed). Each treasury can still be created with any ERC20 token address.
+export const DEFAULT_TOKEN_ADDRESS = import.meta.env.VITE_DEFAULT_TOKEN_ADDRESS || "";

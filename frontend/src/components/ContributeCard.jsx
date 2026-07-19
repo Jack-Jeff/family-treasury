@@ -3,10 +3,9 @@ import { parseUnits } from "viem";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import treasuryAbi from "../lib/treasuryAbi.json";
 import { erc20Abi } from "../lib/erc20Abi";
-import { TREASURY_ADDRESS, USDC_ADDRESS } from "../lib/wagmi";
 import { formatUsdc } from "../lib/format";
 
-export default function ContributeCard({ decimals, symbol, myBalance, myAllowance, isMember, onDone }) {
+export default function ContributeCard({ treasuryAddress, tokenAddress, decimals, symbol, myBalance, myAllowance, isMember, onDone }) {
   const { isConnected } = useAccount();
   const [amount, setAmount] = useState("");
 
@@ -90,7 +89,7 @@ export default function ContributeCard({ decimals, symbol, myBalance, myAllowanc
         {needsApproval ? (
           <button
             disabled={approving || waitingApprove || !amountUnits || insufficientBalance}
-            onClick={() => writeApprove({ address: USDC_ADDRESS, abi: erc20Abi, functionName: "approve", args: [TREASURY_ADDRESS, amountUnits] })}
+            onClick={() => writeApprove({ address: tokenAddress, abi: erc20Abi, functionName: "approve", args: [treasuryAddress, amountUnits] })}
             className="w-full rounded-full bg-[var(--brass)] text-white py-2.5 text-sm font-medium hover:bg-[var(--brass-light)] transition-colors disabled:opacity-50"
           >
             {approving || waitingApprove ? "Approving…" : `Approve ${symbol}`}
@@ -98,7 +97,7 @@ export default function ContributeCard({ decimals, symbol, myBalance, myAllowanc
         ) : (
           <button
             disabled={contributing || waitingContribute || !amountUnits || insufficientBalance}
-            onClick={() => writeContribute({ address: TREASURY_ADDRESS, abi: treasuryAbi, functionName: "contribute", args: [amountUnits] })}
+            onClick={() => writeContribute({ address: treasuryAddress, abi: treasuryAbi, functionName: "contribute", args: [amountUnits] })}
             className="w-full rounded-full bg-[var(--ink)] text-[var(--paper)] py-2.5 text-sm font-medium hover:bg-[var(--verified)] transition-colors disabled:opacity-50"
           >
             {contributing || waitingContribute ? "Contributing…" : "Contribute"}

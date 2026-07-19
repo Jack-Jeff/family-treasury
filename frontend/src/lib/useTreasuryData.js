@@ -1,14 +1,11 @@
 import { useMemo } from "react";
-import { useAccount, useReadContract, useReadContracts } from "wagmi";
+import { useAccount, useReadContracts } from "wagmi";
 import treasuryAbi from "./treasuryAbi.json";
 import { erc20Abi } from "./erc20Abi";
-import { TREASURY_ADDRESS, USDC_ADDRESS } from "./wagmi";
 
-const treasury = { address: TREASURY_ADDRESS, abi: treasuryAbi };
-const usdc = { address: USDC_ADDRESS, abi: erc20Abi };
-
-export function useTreasuryData() {
+export function useTreasuryData(treasuryAddress) {
   const { address: me } = useAccount();
+  const treasury = { address: treasuryAddress, abi: treasuryAbi };
 
   const core = useReadContracts({
     contracts: [
@@ -19,12 +16,9 @@ export function useTreasuryData() {
       { ...treasury, functionName: "getMemberList" },
       { ...treasury, functionName: "proposalCount" },
       { ...treasury, functionName: "getContributions", args: [0n, 1000n] },
-      { ...usdc, functionName: "decimals" },
-      { ...usdc, functionName: "symbol" },
-      me ? { ...usdc, functionName: "balanceOf", args: [me] } : null,
-      me ? { ...usdc, functionName: "allowance", args: [me, TREASURY_ADDRESS] } : null,
-    ].filter(Boolean),
-    query: { refetchInterval: 6000 },
+      { ...treasury, functionName: "token" },
+    ],
+    query: { enabled: !!treasuryAddress, refetchInterval: 6000 },
   });
 
   const [
@@ -35,11 +29,22 @@ export function useTreasuryData() {
     memberList,
     proposalCount,
     contributionsRaw,
-    usdcDecimals,
-    usdcSymbol,
-    myUsdcBalance,
-    myAllowance,
+    tokenAddress,
   ] = (core.data || []).map((r) => r?.result);
+
+  const usdc = { address: tokenAddress, abi: erc20Abi };
+
+  const tokenReads = useReadContracts({
+    contracts: [
+      { ...usdc, functionName: "decimals" },
+      { ...usdc, functionName: "symbol" },
+      me ? { ...usdc, functionName: "balanceOf", args: [me] } : null,
+      me ? { ...usdc, functionName: "allowance", args: [me, treasuryAddress] } : null,
+    ].filter(Boolean),
+    query: { enabled: !!tokenAddress, refetchInterval: 6000 },
+  });
+
+  const [usdcDecimals, usdcSymbol, myUsdcBalance, myAllowance] = (tokenReads.data || []).map((r) => r?.result);
 
   const memberAddrs = memberList || [];
 
@@ -49,12 +54,14 @@ export function useTreasuryData() {
   });
 
   const members = useMemo(() => {
-    return memberAddrs.map((addr, i) => {
-      const r = memberReads.data?.[i]?.result;
-      if (!r) return null;
-      const [name, active, joinedAt, totalContributed] = r;
-      return { address: addr, name, active, joinedAt, totalContributed };
-    }).filter((m) => m && m.active);
+    return memberAddrs
+      .map((addr, i) => {
+        const r = memberReads.data?.[i]?.result;
+        if (!r) return null;
+        const [name, active, joinedAt, totalContributed] = r;
+        return { address: addr, name, active, joinedAt, totalContributed };
+      })
+      .filter((m) => m && m.active);
   }, [memberAddrs, memberReads.data]);
 
   const pCount = Number(proposalCount || 0n);
@@ -79,7 +86,7 @@ export function useTreasuryData() {
         return { id, ...r, myApproval: approved };
       })
       .filter(Boolean)
-      .reverse(); // newest first
+      .reverse();
   }, [ids, proposalReads.data, approvalReads.data]);
 
   const contributions = useMemo(() => {
@@ -92,17 +99,19 @@ export function useTreasuryData() {
         name: members.find((m) => m.address?.toLowerCase() === c.contributor?.toLowerCase())?.name,
         key: `${c.contributor}-${i}`,
       }))
-      .reverse(); // newest first
+      .reverse();
   }, [contributionsRaw, members]);
 
   return {
     isLoading: core.isLoading,
+    treasuryAddress,
+    tokenAddress,
     treasuryName,
     threshold: threshold !== undefined ? Number(threshold) : undefined,
     activeMemberCount: activeMemberCount !== undefined ? Number(activeMemberCount) : undefined,
     treasuryBalance,
     usdcDecimals: usdcDecimals ?? 6,
-    usdcSymbol: usdcSymbol ?? "USDC",
+    usdcSymbol: usdcSymbol ?? "TOKEN",
     myUsdcBalance,
     myAllowance,
     members,
@@ -111,6 +120,7 @@ export function useTreasuryData() {
     isMember: !!members.find((m) => m.address?.toLowerCase() === me?.toLowerCase()),
     refetch: () => {
       core.refetch();
+      tokenReads.refetch();
       memberReads.refetch();
       proposalReads.refetch();
       approvalReads.refetch();
