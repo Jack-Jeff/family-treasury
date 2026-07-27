@@ -28,5 +28,24 @@ module.exports = {
       chainId: 143,
       accounts: [PRIVATE_KEY],
     },
+    giwaTestnet: {
+      url: process.env.GIWA_TESTNET_RPC || "https://sepolia-rpc.giwa.io",
+      chainId: 91342,
+      accounts: [PRIVATE_KEY],
+    },
   },
+  etherscan: {
+    apiKey: {
+      giwaTestnet: "not-needed-for-blockscout",
+    },
+    customChains: [
+      {
+        network: "giwaTestnet",
+        chainId: 91342,
+        urls: {
+          apiURL: "https://sepolia-explorer.giwa.io/api",
+          browserURL: "https://sepolia-explorer.giwa.io",
+        },
+      },
+    ],
 };
