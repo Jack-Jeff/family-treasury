@@ -1,7 +1,6 @@
 import WalletBar from "../components/WalletBar";
 import MyTreasuries from "../components/MyTreasuries";
 import CreateTreasuryForm from "../components/CreateTreasuryForm";
-import { activeChain } from "../lib/wagmi";
 
 export default function HomePage() {
   return (
@@ -11,7 +10,6 @@ export default function HomePage() {
           <div className="flex items-center gap-2">
             <SealMark />
             <span className="font-display font-semibold text-lg">Fundo</span>
-            <span className="text-xs font-mono text-[var(--ink-soft)] ml-1">{activeChain.name}</span>
           </div>
           <WalletBar />
         </div>

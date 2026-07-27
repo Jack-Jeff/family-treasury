@@ -25,7 +25,7 @@ export default function WalletBar() {
     <div className="flex items-center gap-3">
       {wrongChain && (
         <span className="text-xs font-mono px-2.5 py-1 rounded-full bg-[var(--rust)]/10 text-[var(--rust)] border border-[var(--rust)]/30">
-          Wrong network — switch to {activeChain.name}
+          Wrong network — please switch networks in your wallet
         </span>
       )}
       <span className="font-mono text-sm px-3 py-2 rounded-full bg-[var(--paper-dim)] border border-[var(--paper-line)]">

@@ -8,7 +8,6 @@ import ContributionHistory from "../components/ContributionHistory";
 import ProposalCard from "../components/ProposalCard";
 import NewProposalForm from "../components/NewProposalForm";
 import { useTreasuryData } from "../lib/useTreasuryData";
-import { activeChain } from "../lib/wagmi";
 
 export default function TreasuryPage() {
   const { address } = useParams();
@@ -33,7 +32,6 @@ function TreasuryPageInner({ address }) {
             </Link>
             <SealMark />
             <span className="font-display font-semibold text-lg truncate">{data.treasuryName || "Loading…"}</span>
-            <span className="text-xs font-mono text-[var(--ink-soft)] ml-1 shrink-0">{activeChain.name}</span>
           </div>
           <WalletBar />
         </div>
