@@ -1,22 +1,20 @@
-// Deploy FamilyTreasury to Monad.
+// Deploy FamilyTreasury.
 //
 // Usage:
 //   1. Copy .env.example to .env and fill in DEPLOYER_PRIVATE_KEY
 //   2. Edit the CONFIG block below with your family's details
-//   3. npx hardhat run scripts/deploy.js --network monadTestnet
+//   3. npx hardhat run scripts/deploy.js --network giwaTestnet
 //
 const { ethers, network } = require("hardhat");
 
 // ── CONFIG — edit before deploying ──────────────────────────────────────
 const CONFIG = {
-  treasuryName: "The Smith Family Fund",
-  usdcAddress: process.env.USDC_ADDRESS || "", // set per-network; see README for current testnet/mainnet USDC addresses
+  treasuryName: "Fundo Test Treasury",
+  usdcAddress: "0x06c8D5BB2C82d8282D8D01b334d5dA927782a146",
   members: [
-    // { address: "0x...", name: "Mom" },
-    // { address: "0x...", name: "Dad" },
-    // { address: "0x...", name: "Kid" },
+    { address: "0x299CE62c149EdB65976e42d7a535E41719615065", name: "Bonaventure" },
   ],
-  threshold: 2, // e.g. 2-of-3
+  threshold: 1,
 };
 // ─────────────────────────────────────────────────────────────────────────
 
